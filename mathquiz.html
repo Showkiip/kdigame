@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website Title</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .section {
+          padding: 100px 0;
+          background-color: #f8f9fa;
+        }
+    
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+          text-align: center;
+        }
+    
+        h1 {
+          font-size: 36px;
+          font-weight: 700;
+          margin-bottom: 30px;
+          color: #007bff;
+          /* Blue color */
+        }
+    
+        #problem {
+          font-size: 36px;
+          margin-top: 30px;
+          animation: slideIn 1s ease-in-out;
+          color: #333;
+          /* Dark color */
+        }
+    
+        input[type="text"] {
+          font-size: 24px;
+          margin-top: 20px;
+          padding: 10px;
+          border-radius: 5px;
+          border: 1px solid #ccc;
+        }
+    
+        button {
+          font-size: 24px;
+          margin-top: 20px;
+          padding: 10px 20px;
+          background-color: #28a745;
+          /* Green color */
+          color: #fff;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+    
+        button:hover {
+          background-color: #218838;
+          /* Darker green color on hover */
+        }
+    
+        #result {
+          margin-top: 20px;
+          font-size: 24px;
+        }
+    
+        #resultCard {
+          display: none;
+          margin-top: 30px;
+          padding: 20px;
+          border-radius: 15px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+          background-color: #fff;
+          animation: fadeIn 1s ease-in-out;
+        }
+    
+        #results p {
+          font-size: 24px;
+          margin: 10px 0;
+        }
+    
+        #results .winner {
+          font-weight: bold;
+          color: #ff5722;
+          /* Orange color for winner */
+        }
+    
+        #currentUser {
+          font-size: 24px;
+          margin-top: 20px;
+        }
+    
+        @keyframes slideIn {
+          from {
+            transform: translateY(-50px);
+            opacity: 0;
+          }
+    
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+    
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+    
+          to {
+            opacity: 1;
+          }
+        }
+      </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Your Website</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="game.html">Game</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="feedback.html">Feedback</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="content.html">Content</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="jumbotron text-center">
+            <h1>Math Quiz Game</h1>
+            <div id="currentUser"></div>
+            <div id="problem"></div>
+            <input type="text" id="answer">
+            <button onclick="checkAnswer()">Submit</button>
+            <div id="score">Score: <span id="scoreValue">0</span></div>
+            <div id="timer">Time Left: <span id="timeLeft">30</span> seconds</div>
+            <div id="resultCard">
+              <h2>Quiz Result</h2>
+              <div id="results"></div>
+              <button onclick="resetQuiz()">Play Again</button>
+            </div>
+        </div>
+    </main>
+
+
+    <footer class="bg-dark text-light text-center py-3">
+        &copy; 2024 Your Website. All rights reserved.
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        let score = 0;
+        let timeLeft = 30;
+        let userIndex = 0;
+        let users = [];
+        let timer;
+    
+        // Function to generate a random math problem
+        function generateProblem() {
+          const operators = ['+', '-', '*', '/'];
+          const operator = operators[Math.floor(Math.random() * operators.length)];
+          let num1 = Math.floor(Math.random() * 10) + 1;
+          let num2 = Math.floor(Math.random() * 10) + 1;
+    
+          // Ensure division results in a whole number
+          if (operator === '/' && num1 % num2 !== 0) {
+            num1 *= num2;
+          }
+    
+          return `${num1} ${operator} ${num2}`;
+        }
+    
+        // Function to check the answer
+        function checkAnswer() {
+          const problemElement = document.getElementById('problem');
+          const answerElement = document.getElementById('answer');
+          const scoreElement = document.getElementById('scoreValue');
+          const resultElement = document.getElementById('result');
+    
+          const problem = problemElement.textContent;
+          const answer = eval(problem); // Evaluate the expression
+    
+          const currentUser = users[userIndex];
+    
+          if (parseInt(answerElement.value) === answer) {
+            currentUser.score += 10;
+            resultElement.textContent = "Correct!";
+          } else {
+            resultElement.textContent = "Incorrect. Try again!";
+          }
+    
+          scoreElement.textContent = currentUser.score;
+          problemElement.textContent = generateProblem();
+          answerElement.value = ''; // Clear the input field
+        }
+    
+        // Function to start the timer
+        function startTimer() {
+          timeLeft = 30;
+          const timeLeftElement = document.getElementById('timeLeft');
+          timeLeftElement.textContent = timeLeft;
+    
+          timer = setInterval(updateTimer, 1000);
+        }
+    
+        // Function to update timer
+        function updateTimer() {
+          const timeLeftElement = document.getElementById('timeLeft');
+          timeLeft--;
+          timeLeftElement.textContent = timeLeft;
+          if (timeLeft === 0) {
+            clearInterval(timer);
+            nextUser();
+          }
+        }
+    
+        // Function to switch to the next user
+        function nextUser() {
+          userIndex++;
+          if (userIndex < users.length) {
+            startTimer();
+            resetQuiz();
+            showCurrentUser();
+          } else {
+            showResult();
+          }
+        }
+    
+        // Function to show result card
+        function showResult() {
+          const resultCard = document.getElementById('resultCard');
+          const resultsElement = document.getElementById('results');
+    
+          let winner = users[0];
+          for (let i = 1; i < users.length; i++) {
+            if (users[i].score > winner.score) {
+              winner = users[i];
+            }
+          }
+    
+          let resultHTML = '';
+          for (let i = 0; i < users.length; i++) {
+            if (users[i] === winner) {
+              resultHTML += `<p class="winner">${users[i].name}: ${users[i].score} (Winner)</p>`;
+            } else {
+              resultHTML += `<p>${users[i].name}: ${users[i].score}</p>`;
+            }
+          }
+    
+          resultsElement.innerHTML = resultHTML;
+          resultCard.style.display = 'block';
+        }
+    
+    
+        // Function to reset quiz
+        function resetQuiz() {
+          score = 0;
+    
+          const scoreElement = document.getElementById('scoreValue');
+    
+          scoreElement.textContent = score;
+        }
+    
+        // Function to start quiz
+        function startQuiz() {
+          const numParticipants = parseInt(prompt('Enter number of participants:'));
+    
+          for (let i = 0; i < numParticipants; i++) {
+            const name = prompt(`Enter name for participant ${i + 1}:`);
+            users.push({ name: name, score: 0 });
+          }
+    
+          startTimer();
+          showCurrentUser();
+        }
+    
+        // Function to show the name of the current user
+        function showCurrentUser() {
+          const currentUserElement = document.getElementById('currentUser');
+          currentUserElement.textContent = `Current user: ${users[userIndex].name}`;
+        }
+    
+        document.addEventListener("DOMContentLoaded", function () {
+          // Initialize the quiz
+          window.onload = function () {
+            const problemElement = document.getElementById('problem');
+            problemElement.textContent = generateProblem();
+            startQuiz();
+          };
+        });
+    
+      </script>
+</body>
+
+</html>
